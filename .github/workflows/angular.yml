@@ -24,6 +24,11 @@ jobs:
 
       - name: Check Coverage Threshold
         run: |
+          if [ ! -f "coverage/coverage-summary.json" ]; then
+            echo "❌ Le fichier de couverture n'a pas été généré"
+            exit 1
+          fi
+
           COVERAGE=$(node -pe "require('./coverage/coverage-summary.json').total.statements.pct")
           echo "Coverage: $COVERAGE%"
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
