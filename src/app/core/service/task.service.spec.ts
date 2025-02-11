@@ -37,62 +37,159 @@ describe('TaskService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should call addTask and show success message on success', () => {
-    const taskRequest: TaskRequest = { label: 'Test Task', complete: false };
-    const mockResponse: Task = { id: '1', label: 'Test Task', complete: false };
+  describe('addTask', () => {
+    it('should call addTask and show success message on success', () => {
+      const taskRequest: TaskRequest = { label: 'Test Task', complete: false };
+      const mockResponse: Task = { id: '1', label: 'Test Task', complete: false };
 
-    service.addTask(taskRequest).subscribe((task) => {
-      expect(task).toEqual(mockResponse);
+      service.addTask(taskRequest).subscribe((task) => {
+        expect(task).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}`);
+      expect(req.request.method).toBe('POST');
+      req.flush(mockResponse);
+
+      expect(messageServiceSpy.add).toHaveBeenCalledWith({
+        severity: 'success',
+        summary: 'Ajouté',
+        detail: 'Tâche ajoutée avec succès',
+      });
     });
 
-    const req = httpMock.expectOne(`${environment.apiUrl}`);
-    expect(req.request.method).toBe('POST');
-    req.flush(mockResponse);
+    it('should call addTask and show error message on failure', () => {
+      const taskRequest: TaskRequest = { label: 'Test Task', complete: false };
 
-    expect(messageServiceSpy.add).toHaveBeenCalledWith({
-      severity: 'success',
-      summary: 'Ajouté',
-      detail: 'Tâche ajoutée avec succès',
+      service.addTask(taskRequest).subscribe({
+        error: (error) => {
+          expect(error).toBeTruthy();
+        },
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}`);
+      expect(req.request.method).toBe('POST');
+      req.flush('Error', { status: 500, statusText: 'Internal Server Error' });
+
+      expect(messageServiceSpy.add).toHaveBeenCalledWith({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Erreur lors de l’ajout de la tâche',
+      });
     });
   });
 
-  it('should call addTask and show error message on failure', () => {
-    const taskRequest: TaskRequest = { label: 'Test Task', complete: false };
+  describe('loadTasks', () => {
+    it('should call loadTasks and return a list of tasks', () => {
+      const mockResponse: Task[] = [
+        { id: '1', label: 'Task 1', complete: false },
+        { id: '2', label: 'Task 2', complete: true },
+      ];
 
-    service.addTask(taskRequest).subscribe({
-      error: (error) => {
-        expect(error).toBeTruthy();
-      },
+      service.loadTasks().subscribe((tasks) => {
+        expect(tasks.length).toBe(2);
+        expect(tasks).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
 
-    const req = httpMock.expectOne(`${environment.apiUrl}`);
-    expect(req.request.method).toBe('POST');
-    req.flush('Error', { status: 500, statusText: 'Internal Server Error' });
+    it('should handle error when loading tasks', () => {
+      service.loadTasks().subscribe({
+        error: (error) => {
+          expect(error).toBeTruthy();
+        },
+      });
 
-    expect(messageServiceSpy.add).toHaveBeenCalledWith({
-      severity: 'error',
-      summary: 'Échec',
-      detail: 'Erreur lors de l’ajout de la tâche',
+      const req = httpMock.expectOne(`${environment.apiUrl}`);
+      expect(req.request.method).toBe('GET');
+      req.flush('Error', { status: 500, statusText: 'Internal Server Error' });
+
+      expect(messageServiceSpy.add).toHaveBeenCalledWith({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Erreur lors de la récupération des tâches',
+      });
     });
   });
 
-  it('should call catchError and show error message if request fails', () => {
-    const taskRequest: TaskRequest = { label: 'Test Task', complete: false };
+  describe('loadTasksFiltered', () => {
+    it('should call loadTasksFiltered and return filtered tasks', () => {
+      const mockResponse: Task[] = [
+        { id: '1', label: 'Task 1', complete: false },
+        { id: '2', label: 'Task 2', complete: true },
+      ];
+      const filter = 'status';
 
-    service.addTask(taskRequest).subscribe({
-      next: () => fail('expected an error, not tasks'),
-      error: (error) => {
-        expect(error).toBeTruthy();
-      },
+      service.loadTasksFiltered(filter).subscribe((tasks) => {
+        expect(tasks.length).toBe(2);
+        expect(tasks).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}?filter=${filter}`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
 
-    const req = httpMock.expectOne(`${environment.apiUrl}`);
-    req.flush('Error', { status: 500, statusText: 'Internal Server Error' });
+    it('should handle error when loading filtered tasks', () => {
+      const filter = 'status';
 
-    expect(messageServiceSpy.add).toHaveBeenCalledWith({
-      severity: 'error',
-      summary: 'Échec',
-      detail: 'Erreur lors de l’ajout de la tâche',
+      service.loadTasksFiltered(filter).subscribe({
+        error: (error) => {
+          expect(error).toBeTruthy();
+        },
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}?filter=${filter}`);
+      expect(req.request.method).toBe('GET');
+      req.flush('Error', { status: 500, statusText: 'Internal Server Error' });
+
+      expect(messageServiceSpy.add).toHaveBeenCalledWith({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Erreur lors de la récupération des tâches',
+      });
+    });
+  });
+
+  describe('updateTaskStatus', () => {
+    it('should update task status and show success message', () => {
+      const mockTask: Task = { id: '1', label: 'Test Task', complete: false };
+
+      service.updateTaskStatus(mockTask).subscribe((updatedTask) => {
+        expect(updatedTask.complete).toBe(true);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/1/status?complete=true`);
+      expect(req.request.method).toBe('PATCH');
+      req.flush({ ...mockTask, complete: true });
+
+      expect(messageServiceSpy.add).toHaveBeenCalledWith({
+        severity: 'info',
+        summary: 'Mise à jour',
+        detail: 'Statut mis à jour',
+      });
+    });
+
+    it('should handle error when updating task status', () => {
+      const mockTask: Task = { id: '1', label: 'Test Task', complete: false };
+
+      service.updateTaskStatus(mockTask).subscribe({
+        error: (error) => {
+          expect(error).toBeTruthy();
+        },
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/1/status?complete=true`);
+      expect(req.request.method).toBe('PATCH');
+      req.flush('Error', { status: 500, statusText: 'Internal Server Error' });
+
+      expect(messageServiceSpy.add).toHaveBeenCalledWith({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Erreur lors de la mise à jour de la tâche',
+      });
     });
   });
 });
