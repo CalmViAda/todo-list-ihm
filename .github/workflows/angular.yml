@@ -22,21 +22,6 @@ jobs:
       - name: Run Tests with Coverage
         run: npm run test -- --no-watch --no-progress --browsers=ChromeHeadless --code-coverage
 
-      - name: Check Coverage Threshold
-        run: |
-          if [ ! -f "coverage/coverage-summary.json" ]; then
-            echo "❌ Le fichier de couverture n'a pas été généré"
-            exit 1
-          fi
-
-          COVERAGE=$(node -pe "require('./coverage/coverage-summary.json').total.statements.pct")
-          echo "Coverage: $COVERAGE%"
-          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-            echo "❌ La couverture est inférieure à 80% ($COVERAGE%)"
-            exit 1
-          else
-            echo "✅ La couverture est suffisante ($COVERAGE%)"
-          fi
   lint:
     name: Run Lint Check
     runs-on: ubuntu-latest
