@@ -1,0 +1,29 @@
+p-card {
+    padding: 20px;
+}
+
+.p-button {
+    background-color: #0000FF;
+    color: #ffffff;
+    border: none;
+}
+
+.p-button:hover {
+    background-color: #0056b3;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.error {
+    color: red;
+    font-size: 0.8em;
+    text-align: center;
+    margin-top: 10px;
+}
+  

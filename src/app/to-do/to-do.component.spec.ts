@@ -1,0 +1,74 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MessageService } from 'primeng/api';
+import { of } from 'rxjs';
+import { TaskService } from '../core/service/task.service';
+import { TaskRequest } from '../shared/model/task-request.model';
+import { Task } from '../shared/model/task.model';
+import { TaskCreateComponent } from '../task/task-create/task-create.component';
+import { ToDoComponent } from './to-do.component';
+
+describe('ToDoComponent', () => {
+  let component: ToDoComponent;
+  let fixture: ComponentFixture<ToDoComponent>;
+  let taskServiceSpy: jasmine.SpyObj<TaskService>;
+  let messageServiceSpy: jasmine.SpyObj<MessageService>;
+  let formBuilderSpy: jasmine.SpyObj<FormBuilder>;
+
+  beforeEach(() => {
+    taskServiceSpy = jasmine.createSpyObj('TaskService', ['addTask']);
+    messageServiceSpy = jasmine.createSpyObj('MessageService', ['add']);
+    formBuilderSpy = jasmine.createSpyObj('FormBuilder', ['group']);
+    formBuilderSpy.group.and.returnValue(
+      new FormGroup({
+        label: new FormControl('', [Validators.required, Validators.minLength(3)]),
+        complete: new FormControl(false),
+      })
+    );
+
+    TestBed.configureTestingModule({
+      imports: [ToDoComponent, TaskCreateComponent, ReactiveFormsModule],
+      providers: [
+        { provide: TaskService, useValue: taskServiceSpy },
+        { provide: MessageService, useValue: messageServiceSpy },
+        { provide: FormBuilder, useValue: formBuilderSpy },
+      ],
+    }).compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(ToDoComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should add a new task when addTask is called', () => {
+    const taskRequest: TaskRequest = { label: 'Test Task', complete: false };
+    const newTask: Task = { id: '1', label: 'Test Task', complete: false };
+
+    taskServiceSpy.addTask.and.returnValue(of(newTask));
+
+    component.addTask(taskRequest);
+
+    expect(taskServiceSpy.addTask).toHaveBeenCalledWith(taskRequest);
+
+    expect(component.tasks.length).toBe(1);
+    expect(component.tasks[0].label).toBe('Test Task');
+  });
+
+  it('should call taskService.addTask with the correct parameters', () => {
+    const taskRequest: TaskRequest = { label: 'Another Task', complete: false };
+    const newTask: Task = { id: '2', label: 'Another Task', complete: false };
+
+    taskServiceSpy.addTask.and.returnValue(of(newTask));
+
+    component.addTask(taskRequest);
+
+    expect(taskServiceSpy.addTask).toHaveBeenCalledWith(taskRequest);
+    expect(component.tasks).toContain(newTask);
+  });
+});
