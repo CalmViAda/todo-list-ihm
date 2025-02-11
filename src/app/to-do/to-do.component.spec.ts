@@ -6,6 +6,7 @@ import { TaskService } from '../core/service/task.service';
 import { TaskRequest } from '../shared/model/task-request.model';
 import { Task } from '../shared/model/task.model';
 import { TaskCreateComponent } from '../task/task-create/task-create.component';
+import { TaskListComponent } from '../task/task-list/task-list.component';
 import { ToDoComponent } from './to-do.component';
 
 describe('ToDoComponent', () => {
@@ -16,18 +17,21 @@ describe('ToDoComponent', () => {
   let formBuilderSpy: jasmine.SpyObj<FormBuilder>;
 
   beforeEach(() => {
-    taskServiceSpy = jasmine.createSpyObj('TaskService', ['addTask']);
+    taskServiceSpy = jasmine.createSpyObj('TaskService', ['addTask', 'loadTasks']);
+    taskServiceSpy.loadTasks.and.returnValue(of([]));
+
     messageServiceSpy = jasmine.createSpyObj('MessageService', ['add']);
-    formBuilderSpy = jasmine.createSpyObj('FormBuilder', ['group']);
+    formBuilderSpy = jasmine.createSpyObj('FormBuilder', ['group', 'array']);
     formBuilderSpy.group.and.returnValue(
       new FormGroup({
         label: new FormControl('', [Validators.required, Validators.minLength(3)]),
         complete: new FormControl(false),
+        filter: new FormControl(''),
       })
     );
 
     TestBed.configureTestingModule({
-      imports: [ToDoComponent, TaskCreateComponent, ReactiveFormsModule],
+      imports: [ToDoComponent, TaskCreateComponent, TaskListComponent, ReactiveFormsModule],
       providers: [
         { provide: TaskService, useValue: taskServiceSpy },
         { provide: MessageService, useValue: messageServiceSpy },
@@ -58,6 +62,7 @@ describe('ToDoComponent', () => {
 
     expect(component.tasks.length).toBe(1);
     expect(component.tasks[0].label).toBe('Test Task');
+    expect(component.newTask.label).toBe('Test Task');
   });
 
   it('should call taskService.addTask with the correct parameters', () => {
