@@ -1,43 +1,11 @@
-<div class="task-create-container">
-  <h2 class="task-title" id="task-form-title">Ajouter une nouvelle tâche</h2>
-
-  <p-message *ngIf="errorMessage" severity="error" text="{{ errorMessage }}" aria-live="assertive" role="alert">
-  </p-message>
-
-  <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="task-form" aria-labelledby="task-form-title">
-    <div class="form-group">
-      <div class="form-control">
-        <label for="label" id="label-description">Nom de la tâche :</label>
-        <input
-          id="label"
-          formControlName="label"
-          type="text"
-          pInputText
-          class="input-field"
-          placeholder="Nom de la tâche"
-          [ngClass]="{ 'input-invalid': taskForm.get('label')?.invalid && taskForm.get('label')?.touched }"
-          aria-describedby="label-description task-label-error"
-          [attr.aria-invalid]="taskForm.get('label')?.invalid && taskForm.get('label')?.touched"
-          aria-required="true"
-        />
-      </div>
-
-      <p-message
-        *ngIf="taskForm.get('label')?.invalid && taskForm.get('label')?.touched"
-        severity="error"
-        text="Nom de la tâche requis (minimum 3 caractères)"
-        aria-live="assertive"
-      >
-      </p-message>
+<p-card>
+  <form [formGroup]="taskForm" (ngSubmit)="addTask()">
+    <div class="input-group">
+      <input type="text" pInputText formControlName="label" placeholder="Nouvelle tâche..." />
+      <button pButton type="submit" label="Ajouter" icon="pi pi-plus"></button>
     </div>
-
-    <button
-      pButton
-      type="submit"
-      label="Ajouter la tâche"
-      class="btn-submit"
-      [disabled]="taskForm.invalid"
-      [attr.aria-disabled]="taskForm.invalid"
-    ></button>
+    <small *ngIf="taskForm.get('label')?.invalid && taskForm.get('label')?.touched" class="error">
+      Le libellé est obligatoire et doit contenir au moins 3 caractères.
+    </small>
   </form>
-</div>
+</p-card>

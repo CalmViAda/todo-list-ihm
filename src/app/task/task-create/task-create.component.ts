@@ -1,22 +1,24 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { MessageModule } from 'primeng/message';
-import { MessagesModule } from 'primeng/messages';
+import { CardModule } from 'primeng/card';
+import { InputTextModule } from 'primeng/inputtext';
 import { TaskService } from '../../core/service/task.service';
-import { TaskRequest } from '../../shared/task-request.model';
+import { TaskRequest } from '../../shared/model/task-request.model';
 
 @Component({
-  selector: 'app-task-create',
-  imports: [CommonModule, ReactiveFormsModule, MessagesModule, MessageModule, ButtonModule],
+  selector: 'app-add-task',
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, CardModule],
   templateUrl: './task-create.component.html',
   styleUrl: './task-create.component.scss',
 })
 export class TaskCreateComponent {
   public taskForm: FormGroup;
   public errorMessage: string | null = null;
+
+  @Output() taskAdded = new EventEmitter<TaskRequest>();
 
   constructor(
     private readonly fb: FormBuilder,
@@ -29,32 +31,16 @@ export class TaskCreateComponent {
     });
   }
 
-  public onSubmit() {
+  public addTask() {
     if (this.taskForm.invalid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Erreur',
+        detail: 'Le libellé doit contenir au moins 3 caractères',
+      });
       return;
     }
-
-    const taskRequest: TaskRequest = {
-      label: this.taskForm.value.label,
-      complete: false,
-    };
-
-    this.taskService.createTask(taskRequest).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Succès',
-          detail: 'Tâche ajoutée avec succès !',
-        });
-        this.taskForm.reset();
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: "Erreur lors de l'ajout de la tâche",
-        });
-      },
-    });
+    this.taskAdded.emit(this.taskForm.value);
+    this.taskForm.reset({ label: '', complete: false });
   }
 }

@@ -1,17 +1,31 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { TaskRequest } from '../../shared/task-request.model';
+import { MessageService } from 'primeng/api';
+import { catchError, Observable, tap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { TaskRequest } from '../../shared/model/task-request.model';
+import { Task } from '../../shared/model/task.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TaskService {
-  private apiUrl = `http://localhost:8080/api/task`;
+  private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly messageService: MessageService
+  ) {}
 
-  public createTask(task: TaskRequest): Observable<TaskRequest> {
-    return this.http.post<TaskRequest>(this.apiUrl, task);
+  public addTask(task: TaskRequest): Observable<Task> {
+    return this.http.post<Task>(this.apiUrl, task).pipe(
+      tap(() =>
+        this.messageService.add({ severity: 'success', summary: 'Ajouté', detail: 'Tâche ajoutée avec succès' })
+      ),
+      catchError((error) => {
+        this.messageService.add({ severity: 'error', summary: 'Échec', detail: 'Erreur lors de l’ajout de la tâche' });
+        return throwError(() => error);
+      })
+    );
   }
 }

@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { TaskCreateComponent } from './task/task-create/task-create.component';
+import { ToDoComponent } from './to-do/to-do.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/task-create', pathMatch: 'full' },
-  { path: 'task-create', component: TaskCreateComponent },
+  { path: '', redirectTo: '/to-do', pathMatch: 'full' },
+  { path: 'to-do', component: ToDoComponent },
 ];

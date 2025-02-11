@@ -32,3 +32,13 @@ jobs:
           else
             echo "✅ La couverture est suffisante ($COVERAGE%)"
           fi
+      - name: Run Linting
+        run: |
+          npm run lint  # Exécute la commande lint
+
+      - name: Upload linting results
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: lint-results
+          path: lint-report.txt
