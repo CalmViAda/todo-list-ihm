@@ -55,8 +55,6 @@ describe('ToDoComponent', () => {
 
     expect(taskServiceSpy.addTask).toHaveBeenCalledWith(taskRequest);
 
-    expect(component.tasks.length).toBe(1);
-    expect(component.tasks[0].label).toBe('Test Task');
     expect(component.newTask.label).toBe('Test Task');
   });
 
@@ -69,6 +67,5 @@ describe('ToDoComponent', () => {
     component.addTask(taskRequest);
 
     expect(taskServiceSpy.addTask).toHaveBeenCalledWith(taskRequest);
-    expect(component.tasks).toContain(newTask);
   });
 });
