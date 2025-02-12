@@ -11,7 +11,7 @@ describe('TaskListFilterComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [TaskListFilterComponent, ReactiveFormsModule, SelectModule, TranslateModule],
+      imports: [TaskListFilterComponent, ReactiveFormsModule, SelectModule, TranslateModule.forRoot()],
     }).compileComponents();
   });
 
