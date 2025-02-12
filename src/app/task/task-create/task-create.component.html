@@ -2,7 +2,13 @@
   <form [formGroup]="taskForm" (ngSubmit)="addTask()">
     <div class="input-group">
       <input type="text" pInputText formControlName="label" [placeholder]="'task_create.placeholder' | translate" />
-      <button pButton type="submit" [label]="'task_create.add_button' | translate" icon="pi pi-plus"></button>
+      <p-button
+        id="submit-btn"
+        type="submit"
+        [label]="'task_create.add_button' | translate"
+        icon="pi pi-plus"
+        [disabled]="taskForm.invalid"
+      ></p-button>
     </div>
     <small *ngIf="taskForm.get('label')?.invalid && taskForm.get('label')?.touched" class="error">
       {{ 'task_create.label_error' | translate }}

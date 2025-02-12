@@ -31,8 +31,6 @@ export const appConfig: ApplicationConfig = {
     MessageService,
     provideAnimationsAsync(),
     providePrimeNG({
-      inputVariant: 'filled',
-      ripple: true,
       theme: {
         preset: Aura,
         options: {

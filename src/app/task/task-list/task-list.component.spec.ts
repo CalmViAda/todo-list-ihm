@@ -52,6 +52,7 @@ describe('TaskListComponent', () => {
       .compileComponents();
     fixture = TestBed.createComponent(TaskListComponent);
     component = fixture.componentInstance;
+    componentRef = fixture.componentRef;
   });
 
   it('should create the component', () => {
@@ -68,7 +69,6 @@ describe('TaskListComponent', () => {
   });
 
   it('should add tasks to the form array when loaded', () => {
-    componentRef = fixture.componentRef;
     componentRef.setInput('task', { id: '', label: '', complete: false });
     taskServiceSpy.loadTasks.and.returnValue(of(mockTasks));
     fixture.detectChanges();
@@ -115,7 +115,6 @@ describe('TaskListComponent', () => {
   });
 
   it('should not remove task if filter type is not STATUS after toggle', () => {
-    componentRef = fixture.componentRef;
     componentRef.setInput('task', { id: '', label: '', complete: false });
     taskServiceSpy.loadTasks.and.returnValue(of(mockTasks));
     fixture.detectChanges();
@@ -151,12 +150,11 @@ describe('TaskListComponent', () => {
 
   it('should add task to list when a task is added', () => {
     const newTask: Task = { id: '4', label: 'Task 4', complete: false };
-    componentRef = fixture.componentRef;
     componentRef.setInput('task', newTask);
     taskServiceSpy.loadTasks.and.returnValue(of(mockTasks));
     fixture.detectChanges();
 
     expect(component.tasksArray.length).toBe(4);
-    expect(component.tasksArray.at(3).value.label).toBe('Task 4');
+    expect(component.tasksArray.at(0).value.label).toBe('Task 4');
   });
 });

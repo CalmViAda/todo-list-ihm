@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnDestroy } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
+import { Subscription } from 'rxjs';
 import { TaskService } from '../core/service/task.service';
 import { TaskRequest } from '../shared/model/task-request.model';
 import { Task } from '../shared/model/task.model';
@@ -28,13 +29,22 @@ import { TaskForm } from './model/to-do-form.model';
   ],
   templateUrl: './to-do.component.html',
 })
-export class ToDoComponent {
-  public tasks: Task[] = [];
-  public taskForm: FormGroup<TaskForm>;
-  public newTask: Task;
+export class ToDoComponent implements OnDestroy {
+  private readonly taskService = inject(TaskService);
+  private readonly fb = inject(FormBuilder);
+  private readonly rxjsSub = new Subscription();
 
-  constructor(private readonly taskService: TaskService) {
-    this.newTask = { id: '', label: '', complete: false };
+  public newTask: Task = { id: '', label: '', complete: false };
+
+  public taskForm: FormGroup<TaskForm> = this.fb.group<TaskForm>({
+    label: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(3)],
+    }),
+    complete: new FormControl<boolean>(false, { nonNullable: true }),
+  });
+
+  constructor() {
     this.taskForm = new FormGroup<TaskForm>({
       label: new FormControl<string>('', {
         nonNullable: true,
@@ -45,11 +55,16 @@ export class ToDoComponent {
   }
 
   public addTask(taskRequest: TaskRequest): void {
-    this.taskService.addTask(taskRequest).subscribe({
-      next: (task) => {
-        this.tasks.push(task);
-        this.newTask = task;
-      },
-    });
+    this.rxjsSub.add(
+      this.taskService.addTask(taskRequest).subscribe({
+        next: (task) => {
+          this.newTask = task;
+        },
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.rxjsSub.unsubscribe();
   }
 }

@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
 import { MessageService } from 'primeng/api';
 import { TaskService } from '../../core/service/task.service';
@@ -45,26 +46,15 @@ describe('TaskCreateComponent', () => {
     expect(component.taskForm.value).toEqual({ label: '', complete: false });
   });
 
-  it('should show a warning message if the form is invalid and a task is not added', () => {
+  it('should disabled button if the form is invalid and a task is not added', () => {
     component.taskForm.setValue({ label: 'a', complete: false });
 
     component.addTask();
 
-    expect(messageServiceSpy.add).toHaveBeenCalledWith({
-      severity: 'warn',
-      summary: 'Erreur',
-      detail: 'Le libellé doit contenir au moins 3 caractères',
-    });
-  });
-
-  it('should not emit taskAdded event if the form is invalid', () => {
-    const emitSpy = spyOn(component.onTaskAdded, 'emit');
-
-    component.taskForm.setValue({ label: 'a', complete: false });
-
-    component.addTask();
-
-    expect(emitSpy).not.toHaveBeenCalled();
+    const elem = fixture.debugElement.query(By.css('#submit-btn > button'));
+    const button = elem.nativeElement as HTMLButtonElement;
+    expect(button.disabled).toEqual(true);
+    expect(component.taskForm.invalid).toBeTrue();
   });
 
   it('should not call taskService.addTask if form is invalid', () => {

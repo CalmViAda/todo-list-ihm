@@ -4,16 +4,6 @@ p-card {
     padding: 1.5rem;
 }
 
-.p-button {
-    background-color: $primary-color;
-    color: $font-primary-button-color;
-    border: none;
-}
-
-.p-button:hover {
-    background-color: $primary-color-dark;
-}
-
 .input-group {
     display: flex;
     gap: 1rem;
