@@ -11,7 +11,7 @@ import { TaskListFilterComponent } from './component/task-list-filter/task-list-
 import { MockTaskListFilterComponent } from './component/task-list-filter/task-list-filter.component.mock.spec';
 import { TaskListComponent } from './task-list.component';
 
-fdescribe('TaskListComponent', () => {
+describe('TaskListComponent', () => {
   let component: TaskListComponent;
   let componentRef: ComponentRef<TaskListComponent>;
   let fixture: ComponentFixture<TaskListComponent>;
