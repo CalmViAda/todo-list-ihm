@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { MessageService } from 'primeng/api';
 import { TaskService } from '../../core/service/task.service';
 import { TaskRequest } from '../../shared/model/task-request.model';
@@ -16,16 +17,12 @@ describe('TaskCreateComponent', () => {
     messageServiceSpy = jasmine.createSpyObj('MessageService', ['add']);
 
     TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule, TaskCreateComponent],
+      imports: [ReactiveFormsModule, TaskCreateComponent, TranslateModule.forRoot()],
       providers: [
         { provide: TaskService, useValue: taskServiceSpy },
         { provide: MessageService, useValue: messageServiceSpy },
-        FormBuilder,
       ],
     }).compileComponents();
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(TaskCreateComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -37,7 +34,7 @@ describe('TaskCreateComponent', () => {
 
   it('should emit taskAdded event when form is valid and task is added', () => {
     const taskRequest: TaskRequest = { label: 'New Task', complete: false };
-    const emitSpy = spyOn(component.taskAdded, 'emit');
+    const emitSpy = spyOn(component.onTaskAdded, 'emit');
 
     component.taskForm.setValue(taskRequest);
 
@@ -61,7 +58,7 @@ describe('TaskCreateComponent', () => {
   });
 
   it('should not emit taskAdded event if the form is invalid', () => {
-    const emitSpy = spyOn(component.taskAdded, 'emit');
+    const emitSpy = spyOn(component.onTaskAdded, 'emit');
 
     component.taskForm.setValue({ label: 'a', complete: false });
 

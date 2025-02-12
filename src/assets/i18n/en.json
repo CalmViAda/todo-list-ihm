@@ -1,0 +1,25 @@
+{
+    "header": {
+        "header_aria_label": "Header of the application",
+        "title_aria_label": "Title of the TO-DO application",
+        "to_do_list": "To-Do List"
+    },
+    "task_create": {
+        "placeholder": "New task...",
+        "add_button": "Add",
+        "label_error": "The label is required and must contain at least 3 characters."
+    },
+    "task_list_filter": {
+        "filter_by_status": "Filter by status",
+        "select_placeholder": "Select a status"
+    },
+    "task_list": {
+        "status_column": "Status",
+        "task_column": "Task",
+        "delete_column": "Delete",
+        "task_completed": "Task Completed",
+        "delete_task": "Delete task: {{taskName}}"
+    }
+
+}
+  

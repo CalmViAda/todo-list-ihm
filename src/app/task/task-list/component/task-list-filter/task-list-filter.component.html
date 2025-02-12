@@ -1,0 +1,12 @@
+<div class="filter-container">
+  <form [formGroup]="taskFilterForm">
+    <label for="filter">{{ 'task_list_filter.filter_by_status' | translate }}: </label>
+    <p-select
+      formControlName="filter"
+      id="filter"
+      [options]="filters"
+      [placeholder]="'task_list_filter.select_placeholder' | translate"
+      (ngModelChange)="onSelectedFilter()"
+    />
+  </form>
+</div>

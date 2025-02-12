@@ -1,18 +1,14 @@
-.filter-container {
-    padding: 10px;
-}
+@use "../../../assets/variable.scss" as *;
   
 .tasks-table {
-    margin-top: 20px;
+    margin-top: 1rem;
 }
 
 button {
-    margin-left: 10px;
+    margin-left: 0.5rem;
 }
 
 .completed {
     text-decoration: line-through;
-    color: gray;
-}
 
-  
+}

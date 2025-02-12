@@ -1,12 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { TaskService } from '../core/service/task.service';
 import { TaskRequest } from '../shared/model/task-request.model';
 import { Task } from '../shared/model/task.model';
 import { TaskCreateComponent } from '../task/task-create/task-create.component';
+import { MockTaskCreateComponent } from '../task/task-create/task-create.component.mock.spec';
 import { TaskListComponent } from '../task/task-list/task-list.component';
+import { MockTaskListComponent } from '../task/task-list/task-list.component.mock.spec';
 import { ToDoComponent } from './to-do.component';
 
 describe('ToDoComponent', () => {
@@ -14,30 +16,23 @@ describe('ToDoComponent', () => {
   let fixture: ComponentFixture<ToDoComponent>;
   let taskServiceSpy: jasmine.SpyObj<TaskService>;
   let messageServiceSpy: jasmine.SpyObj<MessageService>;
-  let formBuilderSpy: jasmine.SpyObj<FormBuilder>;
 
   beforeEach(() => {
-    taskServiceSpy = jasmine.createSpyObj('TaskService', ['addTask', 'loadTasks']);
-    taskServiceSpy.loadTasks.and.returnValue(of([]));
-
+    taskServiceSpy = jasmine.createSpyObj('TaskService', ['addTask']);
     messageServiceSpy = jasmine.createSpyObj('MessageService', ['add']);
-    formBuilderSpy = jasmine.createSpyObj('FormBuilder', ['group', 'array']);
-    formBuilderSpy.group.and.returnValue(
-      new FormGroup({
-        label: new FormControl('', [Validators.required, Validators.minLength(3)]),
-        complete: new FormControl(false),
-        filter: new FormControl(''),
-      })
-    );
 
     TestBed.configureTestingModule({
-      imports: [ToDoComponent, TaskCreateComponent, TaskListComponent, ReactiveFormsModule],
+      imports: [ToDoComponent, ReactiveFormsModule],
       providers: [
         { provide: TaskService, useValue: taskServiceSpy },
         { provide: MessageService, useValue: messageServiceSpy },
-        { provide: FormBuilder, useValue: formBuilderSpy },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(ToDoComponent, {
+        remove: { imports: [TaskListComponent, TaskCreateComponent] },
+        add: { imports: [MockTaskListComponent, MockTaskCreateComponent] },
+      })
+      .compileComponents();
   });
 
   beforeEach(() => {
