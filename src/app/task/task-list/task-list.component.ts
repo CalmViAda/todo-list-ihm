@@ -1,38 +1,47 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, effect, input, OnInit } from '@angular/core';
+import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { TaskService } from '../../core/service/task.service';
+import { TASK_FILTERS, TaskFilter, TaskFilterType } from '../../shared/model/task-filter.model';
 import { Task } from '../../shared/model/task.model';
+import { TaskListFilterComponent } from './component/task-list-filter/task-list-filter.component';
+import { TaskForm, TasksForm } from './model/task-list-form.model';
 
 @Component({
   selector: 'app-task-list',
-  standalone: true,
   templateUrl: './task-list.component.html',
   styleUrls: ['./task-list.component.scss'],
-  imports: [CommonModule, ReactiveFormsModule, TableModule, CheckboxModule, ToastModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TaskListFilterComponent,
+    TableModule,
+    CheckboxModule,
+    ButtonModule,
+    ToastModule,
+    SelectModule,
+    TranslateModule,
+  ],
 })
 export class TaskListComponent implements OnInit {
-  @Input()
-  public set task(task: Task) {
-    if (task.id !== '') {
-      this.addTaskToList(task);
-    }
-  }
-  public taskFilterForm: FormGroup;
-  public tasksForm: FormGroup;
+  public task = input.required<Task>();
+  public tasksForm: FormGroup<TasksForm>;
+  public currentFilter: TaskFilterType = TaskFilterType.ALL;
 
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly taskService: TaskService
-  ) {
-    this.taskFilterForm = this.fb.group({
-      filter: ['all', Validators.required],
+  constructor(private readonly taskService: TaskService) {
+    this.tasksForm = new FormGroup({
+      tasks: new FormArray<FormGroup<TaskForm>>([]),
     });
-    this.tasksForm = this.fb.group({
-      tasks: this.fb.array([]),
+    effect(() => {
+      if (this.task().id !== '') {
+        this.addTaskToList(this.task());
+      }
     });
   }
 
@@ -53,8 +62,8 @@ export class TaskListComponent implements OnInit {
   }
 
   private loadTasksFiltered(filter: string): void {
-    this.tasksArray.clear();
     this.taskService.loadTasksFiltered(filter).subscribe((tasks) => {
+      this.tasksArray.clear();
       tasks.forEach((task) => {
         this.tasksArray.push(this.createTaskFormGroup(task));
       });
@@ -62,10 +71,10 @@ export class TaskListComponent implements OnInit {
   }
 
   private createTaskFormGroup(task: Task): FormGroup {
-    return this.fb.group({
-      id: [task.id],
-      label: [task.label, Validators.required],
-      complete: [task.complete],
+    return new FormGroup<TaskForm>({
+      id: new FormControl<string>(task.id, { nonNullable: true }),
+      label: new FormControl<string>(task.label, { nonNullable: true, validators: [Validators.required] }),
+      complete: new FormControl<boolean>(task.complete, { nonNullable: true }),
     });
   }
 
@@ -78,11 +87,29 @@ export class TaskListComponent implements OnInit {
     const updatedTask = { ...taskControl.value, complete: !taskControl.value.complete };
     this.taskService.updateTaskStatus(updatedTask).subscribe((updatedTask) => {
       taskControl.patchValue({ complete: updatedTask.complete });
+      if (this.currentFilter === TaskFilterType.STATUS && updatedTask.complete) {
+        this.tasksArray.removeAt(index);
+      }
     });
   }
 
-  onFilterChange() {
-    const filter = this.taskFilterForm.get('filter')?.value;
-    this.loadTasksFiltered(filter);
+  public deleteTask(index: number): void {
+    const taskToDelete = this.tasksArray.at(index).value;
+    this.taskService.deleteTask(taskToDelete.id).subscribe(() => {
+      this.tasksArray.removeAt(index);
+    });
+  }
+
+  public onFilterChange(selectedFilter: TaskFilter): void {
+    const filterType: TaskFilterType = this.getFilterTypeFromCode(selectedFilter.code);
+    this.currentFilter = filterType;
+    const filterCode: string = TASK_FILTERS[filterType].code;
+    this.loadTasksFiltered(filterCode);
+  }
+
+  private getFilterTypeFromCode(code: string): TaskFilterType {
+    return (
+      Object.values(TaskFilterType).find((filterType) => TASK_FILTERS[filterType].code === code) || TaskFilterType.ALL
+    );
   }
 }

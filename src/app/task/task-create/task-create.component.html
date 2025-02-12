@@ -1,11 +1,11 @@
 <p-card>
   <form [formGroup]="taskForm" (ngSubmit)="addTask()">
     <div class="input-group">
-      <input type="text" pInputText formControlName="label" placeholder="Nouvelle tâche..." />
-      <button pButton type="submit" label="Ajouter" icon="pi pi-plus"></button>
+      <input type="text" pInputText formControlName="label" [placeholder]="'task_create.placeholder' | translate" />
+      <button pButton type="submit" [label]="'task_create.add_button' | translate" icon="pi pi-plus"></button>
     </div>
     <small *ngIf="taskForm.get('label')?.invalid && taskForm.get('label')?.touched" class="error">
-      Le libellé est obligatoire et doit contenir au moins 3 caractères.
+      {{ 'task_create.label_error' | translate }}
     </small>
   </form>
 </p-card>

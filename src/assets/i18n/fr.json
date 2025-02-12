@@ -1,0 +1,23 @@
+{
+  "header": {
+    "header_aria_label": "En-tête de l'application",
+    "title_aria_label": "Titre de l'application TO DO",
+    "to_do_list": "Liste de tâches"
+  },
+  "task_create": {
+    "placeholder": "Nouvelle tâche...",
+    "add_button": "Ajouter",
+    "label_error": "Le libellé est obligatoire et doit contenir au moins 3 caractères."
+  },
+  "task_list_filter": {
+    "filter_by_status": "Filtrer par statut",
+    "select_placeholder": "Sélectionner un statut"
+  },
+  "task_list": {
+    "status_column": "Statut",
+    "task_column": "Tâche",
+    "delete_column": "Supprimer",
+    "task_completed": "Tâche complète",
+    "delete_task": "Supprimer la tâche : {{taskName}}"
+  }
+}

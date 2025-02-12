@@ -1,6 +1,10 @@
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f7fc;
-    margin: 0;
-    padding: 0;
+@use 'assets/variable.scss' as *;
+@import "primeicons/primeicons.css";
+
+body { 
+    font-family: $font-family;
+    background-color: $background-color;
+    max-width: $max-width;
+    margin: auto;
+    text-align: center;
 }

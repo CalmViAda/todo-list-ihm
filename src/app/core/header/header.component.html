@@ -1,5 +1,7 @@
-<p-toolbar role="banner" aria-label="Header de l'application">
+<p-toolbar role="banner" [attr.aria-label]="'header.header_aria_label' | translate">
   <div class="p-toolbar-group-center">
-    <h1 class="app-title" aria-label="Titre de l'application TO DO">📝 To-Do List</h1>
+    <h1 class="app-title" [attr.aria-label]="'header.title_aria_label' | translate">
+      📝 {{ 'header.to_do_list' | translate }}
+    </h1>
   </div>
 </p-toolbar>

@@ -68,4 +68,20 @@ export class TaskService {
       })
     );
   }
+
+  public deleteTask(taskId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${taskId}`).pipe(
+      tap(() =>
+        this.messageService.add({ severity: 'success', summary: 'Supprimé', detail: 'Tâche supprimée avec succès' })
+      ),
+      catchError((error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Erreur lors de la suppression de la tâche',
+        });
+        return throwError(() => error);
+      })
+    );
+  }
 }

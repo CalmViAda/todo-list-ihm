@@ -1,58 +1,57 @@
-import { CommonModule } from '@angular/common';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { MessageService } from 'primeng/api';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TableModule } from 'primeng/table';
-import { ToastModule } from 'primeng/toast';
 import { of } from 'rxjs';
 import { TaskService } from '../../core/service/task.service';
+import { TASK_FILTERS, TaskFilter, TaskFilterType } from '../../shared/model/task-filter.model';
 import { Task } from '../../shared/model/task.model';
+import { TaskListFilterComponent } from './component/task-list-filter/task-list-filter.component';
+import { MockTaskListFilterComponent } from './component/task-list-filter/task-list-filter.component.mock.spec';
 import { TaskListComponent } from './task-list.component';
 
 describe('TaskListComponent', () => {
   let component: TaskListComponent;
+  let componentRef: ComponentRef<TaskListComponent>;
   let fixture: ComponentFixture<TaskListComponent>;
-  let taskServiceMock: jasmine.SpyObj<TaskService>;
-  let messageServiceMock: jasmine.SpyObj<MessageService>;
-  let formBuilderSpy: jasmine.SpyObj<FormBuilder>;
+  let taskServiceSpy: jasmine.SpyObj<TaskService>;
+  let messageServiceSpy: jasmine.SpyObj<MessageService>;
+
+  const mockTasks: Task[] = [
+    { id: '1', label: 'Task 1', complete: false },
+    { id: '2', label: 'Task 2', complete: true },
+    { id: '3', label: 'Task 3', complete: false },
+  ];
 
   beforeEach(() => {
-    taskServiceMock = jasmine.createSpyObj('TaskService', ['loadTasks', 'loadTasksFiltered', 'updateTaskStatus']);
-    taskServiceMock.loadTasks.and.returnValue(of([]));
-    messageServiceMock = jasmine.createSpyObj('MessageService', ['add']);
-    formBuilderSpy = jasmine.createSpyObj('FormBuilder', ['group', 'array']);
-    formBuilderSpy.group.and.returnValue(
-      new FormGroup({
-        label: new FormControl('', [Validators.required, Validators.minLength(3)]),
-        complete: new FormControl(false),
-      })
-    );
+    taskServiceSpy = jasmine.createSpyObj('TaskService', [
+      'loadTasks',
+      'loadTasksFiltered',
+      'updateTaskStatus',
+      'deleteTask',
+    ]);
+
+    messageServiceSpy = jasmine.createSpyObj('MessageService', ['add']);
 
     TestBed.configureTestingModule({
-      imports: [
-        TaskListComponent,
-        CommonModule,
-        ReactiveFormsModule,
-        FormsModule,
-        CheckboxModule,
-        TableModule,
-        ToastModule,
-      ],
+      imports: [TaskListComponent, ReactiveFormsModule, TranslateModule.forRoot()],
       providers: [
-        { provide: TaskService, useValue: taskServiceMock },
-        { provide: MessageService, useValue: messageServiceMock },
-        FormBuilder,
-        provideHttpClient(),
-        provideHttpClientTesting(),
+        { provide: TaskService, useValue: taskServiceSpy },
+        { provide: MessageService, useValue: messageServiceSpy },
       ],
-    }).compileComponents();
-
+    })
+      .overrideComponent(TaskListComponent, {
+        remove: {
+          imports: [TaskListFilterComponent],
+        },
+        add: {
+          imports: [MockTaskListFilterComponent],
+        },
+      })
+      .compileComponents();
     fixture = TestBed.createComponent(TaskListComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create the component', () => {
@@ -60,52 +59,104 @@ describe('TaskListComponent', () => {
   });
 
   it('should load tasks on init', () => {
-    const mockTasks: Task[] = [
-      { id: '1', label: 'Task 1', complete: false },
-      { id: '2', label: 'Task 2', complete: true },
-    ];
-    taskServiceMock.loadTasks.and.returnValue(of(mockTasks));
+    taskServiceSpy.loadTasks.and.returnValue(of(mockTasks));
 
     component.ngOnInit();
 
-    expect(taskServiceMock.loadTasks).toHaveBeenCalled();
+    expect(taskServiceSpy.loadTasks).toHaveBeenCalled();
+    expect(component.tasksArray.length).toBe(mockTasks.length);
+  });
+
+  it('should add tasks to the form array when loaded', () => {
+    componentRef = fixture.componentRef;
+    componentRef.setInput('task', { id: '', label: '', complete: false });
+    taskServiceSpy.loadTasks.and.returnValue(of(mockTasks));
+    fixture.detectChanges();
+
+    expect(component.tasksArray.length).toBe(mockTasks.length);
+    expect(component.tasksArray.at(0).value.label).toBe('Task 1');
+  });
+
+  it('should load tasks filtered by filter code', () => {
+    const filterCode = 'status';
+    taskServiceSpy.loadTasksFiltered.and.returnValue(of(mockTasks.filter((task) => !task.complete)));
+
+    component.onFilterChange({ code: 'status', label: 'Tâches incompletes' });
+
+    expect(taskServiceSpy.loadTasksFiltered).toHaveBeenCalledWith(filterCode);
     expect(component.tasksArray.length).toBe(2);
-    expect(component.tasksArray.at(0).get('label')?.value).toBe('Task 1');
-    expect(component.tasksArray.at(1).get('complete')?.value).toBe(true);
+    expect(component.tasksArray.at(0).value.label).toBe('Task 1');
   });
 
-  it('should load filtered tasks on filter change', () => {
-    const mockFilteredTasks: Task[] = [{ id: '1', label: 'Incomplete Task', complete: false }];
-    taskServiceMock.loadTasksFiltered.and.returnValue(of(mockFilteredTasks));
+  it('should delete task from list', () => {
+    taskServiceSpy.deleteTask.and.returnValue(of(void 0));
 
-    component.taskFilterForm.controls['filter'].setValue('status');
-    component.onFilterChange();
+    const taskFormGroup = new FormGroup({
+      id: new FormControl<string>(mockTasks[0].id, { nonNullable: true }),
+      label: new FormControl<string>(mockTasks[0].label, { nonNullable: true, validators: [Validators.required] }),
+      complete: new FormControl<boolean>(mockTasks[0].complete, { nonNullable: true }),
+    });
+    component.tasksArray.push(taskFormGroup);
+    component.deleteTask(0);
 
-    expect(taskServiceMock.loadTasksFiltered).toHaveBeenCalledWith('status');
-    expect(component.tasksArray.length).toBe(1);
-    expect(component.tasksArray.at(0).get('label')?.value).toBe('Incomplete Task');
+    expect(taskServiceSpy.deleteTask).toHaveBeenCalledWith(mockTasks[0].id);
+    expect(component.tasksArray.length).toBe(0);
   });
 
-  it('should add task to the list when set task input', () => {
-    const newTask: Task = { id: '3', label: 'New Task', complete: false };
+  it('should handle filter change and load tasks filtered by the selected filter', () => {
+    const selectedFilter: TaskFilter = TASK_FILTERS[TaskFilterType.STATUS];
+    taskServiceSpy.loadTasksFiltered.and.returnValue(of(mockTasks.filter((task) => !task.complete)));
 
-    component.task = newTask;
+    component.onFilterChange(selectedFilter);
 
-    expect(component.tasksArray.length).toBe(1);
-    expect(component.tasksArray.at(0).get('label')?.value).toBe('New Task');
+    expect(component.currentFilter).toBe(TaskFilterType.STATUS);
+    expect(taskServiceSpy.loadTasksFiltered).toHaveBeenCalledWith(selectedFilter.code);
+    expect(component.tasksArray.length).toBe(2);
   });
 
-  it('should toggle task status when toggleTaskStatus is called', () => {
-    const taskToToggle: Task = { id: '1', label: 'Task 1', complete: false };
-    const mockUpdatedTask: Task = { id: '1', label: 'Task 1', complete: true };
+  it('should not remove task if filter type is not STATUS after toggle', () => {
+    componentRef = fixture.componentRef;
+    componentRef.setInput('task', { id: '', label: '', complete: false });
+    taskServiceSpy.loadTasks.and.returnValue(of(mockTasks));
+    fixture.detectChanges();
+    component.currentFilter = TaskFilterType.ALL;
+    expect(component.tasksArray.length).toBe(3);
 
-    component.tasksArray.push(component['createTaskFormGroup'](taskToToggle));
-
-    taskServiceMock.updateTaskStatus.and.returnValue(of(mockUpdatedTask));
+    const taskToToggle = { ...mockTasks[0], complete: false };
+    taskServiceSpy.updateTaskStatus.and.returnValue(of({ ...taskToToggle, complete: true }));
 
     component.toggleTaskStatus(0);
 
-    expect(taskServiceMock.updateTaskStatus).toHaveBeenCalledWith(mockUpdatedTask);
-    expect(component.tasksArray.at(0).get('complete')?.value).toBe(true);
+    expect(taskServiceSpy.updateTaskStatus).toHaveBeenCalledWith({ ...mockTasks[0], complete: true });
+    expect(component.tasksArray.length).toBe(3);
+  });
+
+  it('should remove task if filter type is STATUS after toggle', () => {
+    component.currentFilter = TaskFilterType.STATUS;
+    taskServiceSpy.loadTasksFiltered.and.returnValue(of(mockTasks.filter((task) => !task.complete)));
+
+    component.onFilterChange({ code: 'status', label: 'Tâches incompletes' });
+
+    expect(component.tasksArray.length).toBe(2);
+    expect(component.currentFilter).toBe(TaskFilterType.STATUS);
+
+    const taskToToggle = { ...mockTasks[0], complete: false };
+    taskServiceSpy.updateTaskStatus.and.returnValue(of({ ...taskToToggle, complete: true }));
+
+    component.toggleTaskStatus(0);
+
+    expect(taskServiceSpy.updateTaskStatus).toHaveBeenCalledWith({ id: '1', label: 'Task 1', complete: true });
+    expect(component.tasksArray.length).toBe(1);
+  });
+
+  it('should add task to list when a task is added', () => {
+    const newTask: Task = { id: '4', label: 'Task 4', complete: false };
+    componentRef = fixture.componentRef;
+    componentRef.setInput('task', newTask);
+    taskServiceSpy.loadTasks.and.returnValue(of(mockTasks));
+    fixture.detectChanges();
+
+    expect(component.tasksArray.length).toBe(4);
+    expect(component.tasksArray.at(3).value.label).toBe('Task 4');
   });
 });

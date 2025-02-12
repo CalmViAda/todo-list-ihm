@@ -1,33 +1,35 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, output } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
-import { TaskService } from '../../core/service/task.service';
 import { TaskRequest } from '../../shared/model/task-request.model';
+import { TaskRequestForm } from './model/task-form.model';
 
 @Component({
   selector: 'app-add-task',
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, CardModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, CardModule, TranslateModule],
   templateUrl: './task-create.component.html',
   styleUrl: './task-create.component.scss',
 })
 export class TaskCreateComponent {
-  public taskForm: FormGroup;
+  public taskForm: FormGroup<TaskRequestForm>;
   public errorMessage: string | null = null;
 
-  @Output() taskAdded = new EventEmitter<TaskRequest>();
+  public onTaskAdded = output<TaskRequest>();
 
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly taskService: TaskService,
-    private messageService: MessageService
-  ) {
-    this.taskForm = this.fb.group({
-      label: ['', [Validators.required, Validators.minLength(3)]],
-      complete: [false],
+  private readonly messageService = inject(MessageService);
+
+  constructor() {
+    this.taskForm = new FormGroup<TaskRequestForm>({
+      label: new FormControl<string>('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.minLength(3)],
+      }),
+      complete: new FormControl<boolean>(false, { nonNullable: true }),
     });
   }
 
@@ -40,7 +42,7 @@ export class TaskCreateComponent {
       });
       return;
     }
-    this.taskAdded.emit(this.taskForm.value);
+    this.onTaskAdded.emit(this.taskForm.getRawValue());
     this.taskForm.reset({ label: '', complete: false });
   }
 }
